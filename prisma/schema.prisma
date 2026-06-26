@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id          String         @id @default(cuid())
+  name        String
+  slug        String         @unique
+  description String?
+  price       Decimal        @db.Decimal(10, 2)
+  compareAt   Decimal?       @db.Decimal(10, 2)
+  sku         String?        @unique
+  stock       Int            @default(0)
+  isActive    Boolean        @default(true)
+  isFeatured  Boolean        @default(false)
+  isNew       Boolean        @default(false)
+  categoryId  String
+  category    Category       @relation(fields: [categoryId], references: [id])
+  images      ProductImage[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([categoryId])
+  @@index([isActive, isFeatured])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  url       String
+  alt       String?
+  sortOrder Int     @default(0)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  orderNumber String      @unique
+  status      OrderStatus @default(PENDING)
+
+  // Customer info
+  firstName   String
+  lastName    String
+  phone       String
+  wilaya      String
+  commune     String
+  address     String
+
+  // Financials
+  subtotal    Decimal     @db.Decimal(10, 2)
+  shipping    Decimal     @db.Decimal(10, 2) @default(0)
+  total       Decimal     @db.Decimal(10, 2)
+
+  notes       String?
+  items       OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([status])
+  @@index([phone])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String
+  productName String
+  productImage String?
+  price       Decimal @db.Decimal(10, 2)
+  quantity    Int
+  total       Decimal @db.Decimal(10, 2)
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+model Settings {
+  id        String   @id @default("singleton")
+  storeName String   @default("Laky Accessoires")
+  phone1    String   @default("")
+  phone2    String   @default("")
+  instagram String   @default("")
+  updatedAt DateTime @updatedAt
+}
