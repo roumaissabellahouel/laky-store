@@ -2,6 +2,10 @@ import StoreHeader from "@/components/layout/StoreHeader";
 import StoreFooter from "@/components/layout/StoreFooter";
 import { prisma } from "@/lib/prisma";
 
+// Products and categories come from the database: render on each request,
+// otherwise pages are frozen with the data present at build time.
+export const dynamic = "force-dynamic";
+
 async function getNavCategories() {
   try {
     return await prisma.category.findMany({
